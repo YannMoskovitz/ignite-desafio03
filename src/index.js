@@ -22,6 +22,12 @@ app.post("/repositories", (request, response) => {
     techs,
     likes: 0
   };
+  
+  if (repository.likes != 0) {
+    return response.status().json({error: "likes have '0' as default value and can't be changed manually!"})
+  }
+
+  repositories.push(repository);
 
   return response.json(repository);
 });
@@ -30,13 +36,15 @@ app.put("/repositories/:id", (request, response) => {
   const { id } = request.params;
   const updatedRepository = request.body;
 
-  repositoryIndex = repositories.findindex(repository => repository.id === id);
+  repositoryIndex = repositories.findIndex(repository => repository.id === id);
 
-  if (repositoryIndex < 0) {
+  if (repositoryIndex < 0 || repositoryIndex >= repositories.length) {
     return response.status(404).json({ error: "Repository not found" });
   }
 
   const repository = { ...repositories[repositoryIndex], ...updatedRepository };
+
+  repository.likes = 0;
 
   repositories[repositoryIndex] = repository;
 
@@ -48,7 +56,7 @@ app.delete("/repositories/:id", (request, response) => {
 
   repositoryIndex = repositories.findIndex(repository => repository.id === id);
 
-  if (repositoryIndex > 0) {
+  if (repositoryIndex < 0 || repositoryIndex >= repositories.length) {
     return response.status(404).json({ error: "Repository not found" });
   }
 
@@ -62,13 +70,17 @@ app.post("/repositories/:id/like", (request, response) => {
 
   repositoryIndex = repositories.findIndex(repository => repository.id === id);
 
-  if (repositoryIndex < 0) {
+  if (repositoryIndex < 0 || repositoryIndex >= repositories.length) {
     return response.status(404).json({ error: "Repository not found" });
   }
 
   const likes = ++repositories[repositoryIndex].likes;
 
-  return response.json('likes');
+  if (likes === null) {
+    return response.status(400).json({error: "likes shouldn't be a null object"})
+  }
+
+  return response.json({likes});
 });
 
 module.exports = app;
